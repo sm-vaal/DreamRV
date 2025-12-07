@@ -16,5 +16,5 @@ DreamRV (from dream RISC-V) is a virtual platform to test and run simple program
 * **-f**: force, jump directly to the simulation loop without loading the program binary
 
 ## Images
-![DreamRV debug mode screenshot](assets/DreamRV-debug-mode "DreamRV debug mode")
-![DreamRV screen mode screenshot](assets/DreamRV-screen.mode "DreamRV screen mode")
+![DreamRV debug mode screenshot](assets/DreamRV-debug-mode.png "DreamRV debug mode")
+![DreamRV screen mode screenshot](assets/DreamRV-screen.mode.png "DreamRV screen mode")
