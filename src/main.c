@@ -5,6 +5,7 @@
 #include "user_interfaces/input.h"
 #include "command_parser.h"
 #include "user_interfaces/screen_only.h"
+#include "user_interfaces/audio.h"
 
 void tickCPU();
 
@@ -51,13 +52,13 @@ int main(int argc, char *argv[]) {
     }
 
 
-
     uint32_t instructionsPerFrame = targetFrequency / targetFPS;
     if (instructionsPerFrame < 1) instructionsPerFrame = 1;
 
     if (!parsedArguments.isScreenOnlyMode) {
         initWindowUI();
         SetTargetFPS(targetFPS);
+        initAudio();
 
         while (!WindowShouldClose()) {
             if (isClockUnlocked) {
@@ -83,13 +84,15 @@ int main(int argc, char *argv[]) {
 
             EndMode2D();
             EndDrawing();
+
+            playSoundFromMemory();
         }
 
         freeUi();
     } else {
-        // TODO: IMPLEMENT SCREEN ONLY MODE
         initWindowScreenOnly();
         SetTargetFPS(targetFPS);
+        initAudio();
         while (!WindowShouldClose()) {
             for (int i = 0; i < instructionsPerFrame; i++) {
                 tickCPU();
@@ -97,6 +100,7 @@ int main(int argc, char *argv[]) {
             BeginDrawing();
             drawFrameBufferToScreenOnly();
             EndDrawing();
+            playSoundFromMemory();
         }
     }
 
@@ -104,6 +108,8 @@ int main(int argc, char *argv[]) {
         free(romName);
         romName = NULL;
     }
+
+    closeAudio();
 
     return 0;
 }

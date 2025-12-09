@@ -23,8 +23,8 @@ const buttonMap_t buttonMap[8] = {
 
 void pollInputs() {
     // set all buttons down by default
-    writeWord(0x84000, 0x00000000);
-    writeWord(0x84004, 0x00000000);
+    writeWord(0x90000, 0x00000000);
+    writeWord(0x90004, 0x00000000);
 
     for (int i = 0; i < (sizeof(buttonMap) / sizeof(buttonMap_t)); i++) {
         if (IsKeyDown(buttonMap[i].keyCode)) {
