@@ -11,11 +11,48 @@ DreamRV (from dream RISC-V) is a virtual platform to test and run simple program
 ## Usage
 ### Creating programs
 To use the platform, it's essential to know how MMIO virtual devices are mapped:
-* **frame buffer**: **0x80000-0x83FFF**, row-first as RGBA values (e.g. 0xFF0000FF is red, 0xFFFFFFFF is white...)
-* **keypad**: **0x84000-0x87007**, read as a byte per button in the following order: up, down, left, right, A, B, C, D. Note that the buttons are mapped by default to the keyboard as up, down, left, right, Q, W, E, R
+* **frame buffer**: **0x80000-0x8FFFF**, row-first as RGBA values (e.g. 0xFF0000FF is red, 0xFFFFFFFF is white...)
+  
+* **keypad**: **0x90000-0x90007**, read as a byte per button:
+
+| button  | offset | keyboard mapping |
+|---------|--------|------------------|
+| up      | 0      | key up           |
+| down    | 1      | key down         |
+| left    | 2      | key left         |
+| right   | 3      | key right        |
+| A       | 4      | key Q            |
+| B       | 5      | key W            |
+| C       | 6      | key E            |
+| D       | 7      | key R            |
+
+* **sound system**: **0x90008-0x90087**, 4 channels, 0x20 offset each channel. Within a channel:
+  
+| NAME     | ADDRESS | DESCRIPTION |
+|----------|---------|-------------|
+| DURATION | 0x00 |sound duration in ms|
+| FREQUENCY| 0x04 | sound frequency in Hz|
+| ENABLE | 0x08 | set nonzero to play sound|
+| FINISHED | 0x0C | reads zero if sound finished |
+| VOLUME | 0x10 | write 0-255, channel volume|
+| WAVEFORM | 0x14 | write 0-8, sound waveform|
+
+**Waveform numbers:**
+| TYPE | VALUE |
+| ----- | ----- |
+| sine | 0 |
+| square | 1 |
+| triangle | 2 |
+| noise | 3 |
+| TIA (atari) bass | 4 |
+| sawtooth | 5|
+| PWM 25% duty cycle | 6 |
+| PWM 12.5% duty cycle | 7 |
+| stepped rectangle | 8 |
 
 **Direction polling loop example**
 ```
+li s1, 0x90000
 button_poll_loop:
 
 lb t0, 0(s1)      # get up
@@ -48,12 +85,70 @@ sw a2, 0(t1)
 ret
 ```
 
+**Sound system example: testing the channels**
+```
+.section .text
+.globl _start
+
+.equ AUDIO_BASE,      0x90008
+.equ CH_WIDTH,        0x20
+
+_start:
+    li s0, AUDIO_BASE   # s0 = Base Address
+    li s1, 0            # s1 = Channel Index (0-3)
+    li s2, 0            # s2 = Instrument Index (0-8)
+
+test_loop:
+    # 1. Calculate Current Channel Address
+    #    Address = Base + (Index * 32)
+    li t0, CH_WIDTH
+    mul t0, s1, t0      # t0 = Index * 0x20
+    add s3, s0, t0      # s3 = CURRENT Channel Address (e.g. 0x90008, 0x90028...)
+
+    # 2. Write Sound Parameters
+    li t0, 500          # Duration: 500ms
+    sw t0, 0(s3)
+
+    li t0, 440          # Frequency: 440Hz
+    sw t0, 4(s3)
+
+    sw s2, 20(s3)       # Waveform: s2 (Cycles 0-8)
+
+    li t0, 200          # Volume: 200
+    sw t0, 16(s3)
+
+    # 3. Trigger Sound
+    sw zero, 12(s3)     # Clear Status (Set to 0/Busy) BEFORE trigger, to prevent issues
+    
+    li t0, 1
+    sw t0, 8(s3)        # Enable = 1
+
+    # 4. Wait for Sound to Finish
+wait_busy:
+    lw t0, 12(s3)       # Read Status
+    beqz t0, wait_busy  # Loop while 0 (Busy)
+
+    # 5. Update Loops
+    
+    # Increment Channel (0 -> 1 -> 2 -> 3 -> 0)
+    addi s1, s1, 1
+    li t0, 4
+    rem s1, s1, t0      # Modulo 4
+
+    # Increment Instrument (0 -> ... -> 8 -> 0)
+    addi s2, s2, 1
+    li t0, 9
+    rem s2, s2, t0      # Modulo 9
+
+    j test_loop
+```
+
 **Example program: a movable dot on the screen**
 ```
 .section .text
 .globl _start
 
-li s1, 0x84000    # button map base
+li s1, 0x90000    # button map base
 
 li s2, 64         # current x
 li s3, 63         # previous x
@@ -61,7 +156,7 @@ li s3, 63         # previous x
 li s4, 64         # current y
 li s5, 63         # previous y
 
-li s6, 0x80000    # famebuffer mmio base
+li s6, 0x80000    # framebuffer mmio base
 
 li s0, 0
 li s7, 127        # for bounds check
