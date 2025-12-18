@@ -11,8 +11,6 @@
 #define TOSTRING2(x) #x
 #define TOSTRING(x) TOSTRING2(x)
 
-
-
 #define NBUTTONS 16
 #define NTEXTBOXES 16
 #define NRECTANGLES 64
@@ -124,7 +122,7 @@ void initRectangles();
 
 void updateBoxesToCpuState(uiTextBox_t* aliasBox, uiTextBox_t* regIndexBox,uiTextBox_t* regValBox,
                            uiTextBox_t* pcBox, uiTextBox_t* currentInstructionBox,
-                           uiTextBox_t* memAddrBox, uiTextBox_t* memValBox);
+                           uiTextBox_t* memAddrBox, uiTextBox_t* memValBox, uiTextBox_t* disassembledBox);
 void freeUi();
 
 

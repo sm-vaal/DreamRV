@@ -35,6 +35,8 @@ add_executable(DreamRV src/main.c
         src/user_interfaces/screen_only.h
         src/user_interfaces/audio.c
         src/user_interfaces/audio.h
+        src/RV32_emu/disassembler.c
+        src/RV32_emu/disassembler.h
 )
 
 target_link_libraries(DreamRV PRIVATE raylib)

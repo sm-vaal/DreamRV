@@ -4,6 +4,7 @@
 
 #include "ui.h"
 #include "../RV32_emu/RV32_core.h"
+#include "../RV32_emu/disassembler.h"
 #include "gfx.h"
 
 #include <stdio.h>
@@ -78,7 +79,7 @@ void drawElements() {
     drawButtons();
     updateBoxesToCpuState(&textBoxes[0], &textBoxes[1],
         &textBoxes[2], &textBoxes[3], &textBoxes[4],
-        &textBoxes[6], &textBoxes[7]);
+        &textBoxes[6], &textBoxes[7], &textBoxes[8]);
     drawTextBoxes();
     drawDisplayBox();
     drawRectangles();
@@ -222,7 +223,7 @@ void freeUi() {
 
 void updateBoxesToCpuState(uiTextBox_t* aliasBox, uiTextBox_t* regIndexBox,uiTextBox_t* regValBox,
                            uiTextBox_t* pcBox, uiTextBox_t* currentInstructionBox,
-                           uiTextBox_t* memAddrBox, uiTextBox_t* memValBox) {
+                           uiTextBox_t* memAddrBox, uiTextBox_t* memValBox, uiTextBox_t* disassembledBox) {
 
     // registers
     char aliasBuf[8];
@@ -249,6 +250,8 @@ void updateBoxesToCpuState(uiTextBox_t* aliasBox, uiTextBox_t* regIndexBox,uiTex
 
     snprintf(currentInstructionBox->text, 50, "Last instruction: 0x%08X", cpuState.currentInstruction);
     snprintf(pcBox->text, 32, "PC          0x%08X", cpuState.PC);
+
+    getDisassembledInstruction(cpuState.currentInstruction, disassembledBox->text, MAX_TEXT_LEN);
 
     // memory
     memAddrBox->text[0] = '\0';
@@ -601,7 +604,7 @@ void initTextBoxes() {
     char* box6TextBuffer = calloc(sizeof(char), MAX_TEXT_LEN);
     box6TextBuffer[0] = '\0';
 
-    textBoxes[6] = (uiTextBox_t) (uiTextBox_t) {
+    textBoxes[6] = (uiTextBox_t) {
         .isEnabled = true,
         .skipBackground = false,
         .xPos = 940,
@@ -622,7 +625,7 @@ void initTextBoxes() {
     char* box7TextBuffer = calloc(sizeof(char), MAX_TEXT_LEN);
     box7TextBuffer[0] = '\0';
 
-    textBoxes[7] = (uiTextBox_t) (uiTextBox_t) {
+    textBoxes[7] = (uiTextBox_t) {
         .isEnabled = true,
         .skipBackground = true,
         .xPos = 1100,
@@ -639,6 +642,26 @@ void initTextBoxes() {
         .textColor = BLACK
     };
 
+    // disassembled opcode text buffer
+    char* box8TextBuffer = calloc(sizeof(char), MAX_TEXT_LEN);
+    strcpy(box8TextBuffer, "Last mnemonic");
+
+    textBoxes[8] = (uiTextBox_t) (uiTextBox_t) {
+        .isEnabled = true,
+        .skipBackground = false,
+        .xPos = 280,
+        .yPos = 130,
+        .width = 200,
+        .height = 60,
+        .borderWidth = 4,
+        .borderColor =  DARKGRAY,
+        .innerColor  =  WHITE,
+        .text = box8TextBuffer,
+        .textHorizPadding = 18,
+        .textVertPadding = 20,
+        .fontSize = 20,
+        .textColor = BLACK
+    };
 
 }
 
